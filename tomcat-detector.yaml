@@ -4,6 +4,7 @@ metadata:
   name: tomcat-detector
   namespace: default
 spec:
+  serviceAccountName: internal-kubectl
   containers:
     - name: tomcat-detector
       image: tomcat_detector:alpha

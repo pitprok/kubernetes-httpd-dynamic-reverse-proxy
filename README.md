@@ -7,4 +7,4 @@ Run setup.sh to set it up
 and then run
 `kubectl logs -f tomcat-detector`
 and in a separate windows run
-`kubectl apply -f tomcat.yaml`
+`kubectl apply -f tomcat-deployment.yaml`

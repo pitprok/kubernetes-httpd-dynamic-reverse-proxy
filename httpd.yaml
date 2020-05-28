@@ -9,9 +9,11 @@ spec:
       image: httpd:2.4
       imagePullPolicy: IfNotPresent
       volumeMounts:
-      - name: httpdconf
+      - name: httpd-conf
         mountPath: /usr/local/apache2/conf/httpd.conf
         subPath: httpd.conf
+      - name: balancer-conf
+        mountPath: /usr/local/apache2/conf/balancer/
       ports:
         - containerPort: 80
       livenessProbe:
@@ -32,7 +34,22 @@ spec:
           port: 80
         failureThreshold: 60
         periodSeconds: 5
+  initContainers:
+  - name: init-httpd
+    image: alpine
+    command: ['cp', '/tmp/temp-balancer/proxy_balancer.conf','/tmp/balancer/']
+    volumeMounts:
+      - name: temp-balancer-conf
+        mountPath: /tmp/temp-balancer/proxy_balancer.conf
+        subPath: proxy_balancer.conf
+      - name: balancer-conf
+        mountPath: /tmp/balancer/
   volumes:
-  - name: httpdconf
+  - name: httpd-conf
     configMap:
-      name: httpdconfigmap
+      name: httpd-configmap
+  - name: temp-balancer-conf
+    configMap:
+      name: proxy-balancer-configmap
+  - name: balancer-conf
+    emptyDir: {}
