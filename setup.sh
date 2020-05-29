@@ -1,7 +1,7 @@
 #!/bin/bash
-pushd tomcat-detector/
+pushd tomcat-detector/ || exit
 docker build -f Dockerfile.multi -t tomcat_detector:alpha .
-popd
+popd || exit
 kubectl apply -f service-account.yaml
 kubectl apply -f pod-modifier-role.yaml
 kubectl apply -f pod-modifier-binding.yaml

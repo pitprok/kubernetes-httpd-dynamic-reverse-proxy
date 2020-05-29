@@ -42,4 +42,3 @@ COPY --from=0 /kubectl /usr/local/bin/kubectl
 COPY "tomcat_detector.py" .
 
 CMD ["python", "./tomcat_detector.py"]
-
