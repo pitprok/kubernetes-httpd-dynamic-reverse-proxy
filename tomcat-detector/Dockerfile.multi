@@ -32,9 +32,7 @@ LABEL \
     architecture="x86_64"
 
 RUN \
-    pip install kubernetes && \
-    pip install sh
-
+    pip install kubernetes
 
 RUN useradd user
 

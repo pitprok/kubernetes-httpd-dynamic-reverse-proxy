@@ -1,7 +1,5 @@
 from kubernetes import client, config, watch
 import requests
-import json
-import sh
 import subprocess
 import time
 
