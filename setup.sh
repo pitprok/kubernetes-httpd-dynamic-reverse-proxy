@@ -1,4 +1,7 @@
 #!/bin/bash
+### Uncomment the following command to build
+### the tomcat-detector image in minikube
+#eval $(minikube docker-env)
 pushd tomcat-detector/ || exit
 docker build -f Dockerfile.multi -t tomcat_detector:alpha .
 popd || exit

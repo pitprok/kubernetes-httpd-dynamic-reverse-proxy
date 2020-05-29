@@ -7,6 +7,7 @@ data:
     ProxyRequests Off
     ProxyTimeout 300
     ProxyPreserveHost On
+    BalancerGrowth 10
     <Proxy "balancer://mycluster">
         ProxySet lbmethod=byrequests
     </Proxy>
