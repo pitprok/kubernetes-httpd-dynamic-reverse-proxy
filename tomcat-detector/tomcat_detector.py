@@ -81,6 +81,20 @@ def tomcat_responds(pod_name, pod_ip, tomcat_port):
         if i == 10:
             return False
 
+def ip_already_exists(pod_ip, container_port):
+    grep_regex = pod_ip+":"+container_port
+    ip_already_exists_command = [
+        "kubectl", "exec", httpd_pod_name, "--", "grep", grep_regex, balancer_conf]
+    try:
+        subprocess.check_call(ip_already_exists_command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        return True
+    except subprocess.CalledProcessError as e:
+        ### grep returns 1 when no matches are found ###
+        if e.returncode == 1:
+            return False
+        else:
+            raise
+
 def main():
     config.load_incluster_config()
     tomcats = []
@@ -118,10 +132,15 @@ def main():
                     elif pod_ip not in tomcats and container_active:
 
                         if tomcat_responds(pod_name, pod_ip, container_port):
-                            print("Tomcat server in pod \""+pod_name +"\" is online, adding it to proxy_balancer.conf")
-                            add_to_balancer(pod_ip, container_port)
-                            tomcats.append(pod_ip)
-                            reload_httpd()
+                            if ip_already_exists(pod_ip, container_port):
+                                print("IP of pod \"" + pod_name + "\" already in proxy_balancer.conf. Skipping...")
+                                print("")
+                                tomcats.append(pod_ip)
+                            else:
+                                print("Tomcat server in pod \""+pod_name +"\" is online, adding it to proxy_balancer.conf")
+                                add_to_balancer(pod_ip, container_port)
+                                tomcats.append(pod_ip)
+                                reload_httpd()
 
                         else:
                             print("Can't get a response from tomcat, check pod "+pod_name)
