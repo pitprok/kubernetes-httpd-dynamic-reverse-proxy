@@ -102,7 +102,6 @@ def main():
     for event in w.stream(v1.list_pod_for_all_namespaces):
         #TODO lookout for httpd delete events
         #TODO handle no-existent httpd
-        #TODO load httpd pod name and configurations location from configuration file
         type = event['type']
         pod = event['object']
         pod_ip = get_pod_IP(pod)
