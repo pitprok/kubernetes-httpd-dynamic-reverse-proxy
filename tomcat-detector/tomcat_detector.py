@@ -3,10 +3,7 @@ import requests
 import subprocess
 import time
 import re
-
-httpd_pod_name = "httpd"
-balancer_conf = "/usr/local/apache2/conf/balancer/proxy_balancer.conf"
-httpd_conf= "/usr/local/apache2/bin/httpd"
+from httpd_configuration import httpd_pod_name, proxy_balancer_conf, httpd_binary
 
 def get_pod_IP(pod):
     if pod.status.pod_ip is not None:
@@ -23,7 +20,7 @@ def pod_contains_tomcat(pod):
 
 def reload_httpd():
     print("Reloading httpd configuration.")
-    httpd_reload_command = "kubectl,exec,httpd,--,"+httpd_conf+",-k,graceful"
+    httpd_reload_command = "kubectl,exec,httpd,--,"+httpd_binary+",-k,graceful"
     command_array = httpd_reload_command.split(",")
     subprocess.check_call(command_array, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     print("")
@@ -32,14 +29,14 @@ def reload_httpd():
 def add_to_balancer(pod_ip, container_port):
     sed_expression = "s|\\(<Proxy \"balancer:.*>\\)|\\1\\n    BalancerMember \"http://" + pod_ip + ":"+ container_port +"\"|"
     add_balancer_member_command = [
-        "kubectl", "exec", httpd_pod_name, "--", "sed", "-i", sed_expression, balancer_conf]
+        "kubectl", "exec", httpd_pod_name, "--", "sed", "-i", sed_expression, proxy_balancer_conf]
     subprocess.check_call(add_balancer_member_command)
 
 
 def remove_from_balancer(pod_ip, container_port):
     sed_expression = "/    BalancerMember \"http:\/\/" + pod_ip + ":" + container_port + "\"/d"
     remove_balancer_member_command = [
-        "kubectl", "exec", httpd_pod_name, "--", "sed", "-i", sed_expression, balancer_conf]
+        "kubectl", "exec", httpd_pod_name, "--", "sed", "-i", sed_expression, proxy_balancer_conf]
     subprocess.check_call(remove_balancer_member_command)
 
 
@@ -84,7 +81,7 @@ def tomcat_responds(pod_name, pod_ip, tomcat_port):
 def ip_already_exists(pod_ip, container_port):
     grep_regex = pod_ip+":"+container_port
     ip_already_exists_command = [
-        "kubectl", "exec", httpd_pod_name, "--", "grep", grep_regex, balancer_conf]
+        "kubectl", "exec", httpd_pod_name, "--", "grep", grep_regex, proxy_balancer_conf]
     try:
         subprocess.check_call(ip_already_exists_command, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
         return True
@@ -105,6 +102,7 @@ def main():
     for event in w.stream(v1.list_pod_for_all_namespaces):
         #TODO lookout for httpd delete events
         #TODO handle no-existent httpd
+        #TODO load httpd pod name and configurations location from configuration file
         type = event['type']
         pod = event['object']
         pod_ip = get_pod_IP(pod)

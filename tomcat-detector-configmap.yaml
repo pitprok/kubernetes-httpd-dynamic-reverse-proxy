@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tomcat-detector-configmap
+data:
+  httpd_configuration.py: |
+    httpd_pod_name = "httpd"
+    proxy_balancer_conf = "/usr/local/apache2/conf/balancer/proxy_balancer.conf"
+    httpd_binary= "/usr/local/apache2/bin/httpd"

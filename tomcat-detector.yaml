@@ -10,3 +10,11 @@ spec:
       image: tomcat_detector:alpha
       imagePullPolicy: IfNotPresent
       tty: true
+      volumeMounts:
+      - name: httpd-configuration
+        mountPath: /httpd_configuration.py
+        subPath: httpd_configuration.py
+  volumes:
+  - name: httpd-configuration
+    configMap:
+      name: tomcat-detector-configmap
