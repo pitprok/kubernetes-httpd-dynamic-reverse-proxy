@@ -3,7 +3,7 @@ import requests
 import subprocess
 import time
 import re
-from httpd_configuration import httpd_pod_name, proxy_balancer_conf, httpd_binary
+from httpd_configuration import httpd_pod_name, proxy_balancer_conf, httpd_binary, httpd_container_name
 
 def get_pod_IP(pod):
     if pod.status.pod_ip is not None:
@@ -17,10 +17,9 @@ def pod_contains_tomcat(pod):
             return True
     return False
 
-
 def reload_httpd():
     print("Reloading httpd configuration.")
-    httpd_reload_command = "kubectl,exec,httpd,--,"+httpd_binary+",-k,graceful"
+    httpd_reload_command = "kubectl,exec,httpd,--container,"+httpd_container_name+",--,"+httpd_binary+",-k,graceful"
     command_array = httpd_reload_command.split(",")
     subprocess.check_call(command_array, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     print("")
@@ -102,13 +101,13 @@ def main():
     for event in w.stream(v1.list_pod_for_all_namespaces):
         #TODO lookout for httpd delete events
         #TODO handle no-existent httpd
-        type = event['type']
         pod = event['object']
         pod_ip = get_pod_IP(pod)
         pod_name = pod.metadata.name
+        print("Namespace: %s Pod Name: %s" %
+                    (pod.metadata.namespace, pod.metadata.name))
         if pod_contains_tomcat(pod):
-            print("Namespace: %s Pod Name: %s Event: %s" %
-                  (pod.metadata.namespace, pod.metadata.name, type))
+
             if pod_ip is not None:
                 if pod.status.conditions is not None and \
                     pod.status.container_statuses is not None:
@@ -155,6 +154,7 @@ def main():
                     print("Pod status elements for pod \"" +pod_name+"\" are not initialized yet.")
             else:
                 print("Pod \""+pod_name+"\" has no IP yet.")
+
 
 
 if __name__ == "__main__":
