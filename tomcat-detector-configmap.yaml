@@ -8,3 +8,4 @@ data:
     proxy_balancer_conf = "/usr/local/apache2/conf/balancer/proxy_balancer.conf"
     httpd_binary= "/usr/local/apache2/bin/httpd"
     httpd_container_name = "httpd"
+    tomcat_image="tomcat:.*"
