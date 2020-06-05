@@ -3,7 +3,12 @@ import requests
 import subprocess
 import time
 import re
-from httpd_configuration import httpd_pod_name, proxy_balancer_conf, httpd_binary, httpd_container_name, tomcat_image
+from httpd_configuration import httpd_pod_name, \
+                                proxy_balancer_conf, \
+                                httpd_binary, \
+                                httpd_container_name, \
+                                tomcat_image, \
+                                tomcat_labels
 
 def get_pod_IP(pod):
     if pod.status.pod_ip is not None:
@@ -138,9 +143,20 @@ def handle_httpd_pod(pod, tomcats, httpd_online):
 #######################################################################################################################
 
 def pod_contains_tomcat(pod):
+    images_match = False
+
     for container in pod.spec.containers:
         if re.match(tomcat_image, container.image) is not None:
-            return True
+            images_match = True
+            break
+    if images_match and \
+        tomcat_labels is not None and \
+        tomcat_labels and \
+        pod.metadata.labels is not None and \
+        tomcat_labels.items() <= pod.metadata.labels.items():
+
+        return True
+
     return False
 
 def get_tomcat_container_status(pod):
