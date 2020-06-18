@@ -74,8 +74,7 @@ def get_httpd_container_specs(containers_specs):
     for container_specs in containers_specs:
         if container_specs.name == httpd_container_name:
             return container_specs
-        else:
-            return None
+    return None
 
 def handle_httpd_pod(pod, tomcats, httpd_online):
     pod_ip = get_pod_IP(pod)
