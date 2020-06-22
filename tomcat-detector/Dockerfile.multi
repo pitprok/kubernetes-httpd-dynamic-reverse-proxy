@@ -24,21 +24,23 @@ RUN apt update && \
       chmod +x ./kubectl
 
 # Second Stage
-FROM python:3.7.7
+FROM golang:1.13.12
 
 LABEL \
-    version="alpha" \
+    version="beta" \
     description="Script that watches for events concerning the creation and removal of tomcat pods" \
     architecture="x86_64"
 
-RUN \
-    pip install kubernetes
+RUN useradd user && mkdir tomcat-detector && chmod -R 777 tomcat-detector/
 
-RUN useradd user
+
+
+COPY --from=0 /kubectl /usr/local/bin/kubectl
+COPY "main.go" "go.mod" "go.sum" /tomcat-detector/
+WORKDIR /tomcat-detector/
+RUN go build
 
 USER user
 
-COPY --from=0 /kubectl /usr/local/bin/kubectl
-COPY "tomcat_detector.py" .
-
-CMD ["python", "./tomcat_detector.py"]
+# CMD ["go", "run", "/tomcat-detector/main.go"]
+CMD ["./tomcat-detector"]

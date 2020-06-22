@@ -7,14 +7,14 @@ spec:
   serviceAccountName: internal-kubectl
   containers:
     - name: tomcat-detector
-      image: tomcat_detector:alpha
+      image: tomcat_detector:beta
       imagePullPolicy: IfNotPresent
       tty: true
       volumeMounts:
-      - name: httpd-configuration
-        mountPath: /httpd_configuration.py
-        subPath: httpd_configuration.py
+      - name: configuration
+        mountPath: /tomcat-detector/config.yml
+        subPath: config.yml
   volumes:
-  - name: httpd-configuration
+  - name: configuration
     configMap:
       name: tomcat-detector-configmap
