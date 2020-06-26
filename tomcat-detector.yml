@@ -7,7 +7,7 @@ spec:
   serviceAccountName: internal-kubectl
   containers:
     - name: tomcat-detector
-      image: tomcat_detector:beta
+      image: pitprok/tomcat_detector:test
       imagePullPolicy: IfNotPresent
       tty: true
       volumeMounts:
