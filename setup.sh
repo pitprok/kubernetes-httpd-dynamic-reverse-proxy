@@ -11,5 +11,5 @@ kubectl apply -f pod-modifier-binding.yml
 kubectl apply -f httpd-configmap.yml
 kubectl apply -f proxy-balancer-configmap.yml
 kubectl apply -f tomcat-detector-configmap.yml
-kubectl apply -f httpd.yml
+sleep 5
 kubectl apply -f tomcat-detector.yml

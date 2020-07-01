@@ -299,8 +299,10 @@ func handleTomcatPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) {
 		tomcatStatus := getTomcatContainerStatus(pod)
 		tomcatSpecs := getTomcatContainerSpecs(pod, tomcatStatus)
 		containerIsActive := containerIsActive(pod, tomcatStatus)
+
 		// We assume that only one port is exposed on the tomcat container
 		containerPort := strconv.Itoa(int(tomcatSpecs.Ports[0].ContainerPort))
+		
 		_, ok := tomcats[podIP]
 		if ok &&
 			!containerIsActive {
@@ -347,7 +349,6 @@ func main() {
 	tomcats := make(map[string]string)
 	httpdOnline := false
 
-	// use the current context in kubeconfig
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())
