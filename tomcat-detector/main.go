@@ -302,7 +302,7 @@ func handleTomcatPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) {
 
 		// We assume that only one port is exposed on the tomcat container
 		containerPort := strconv.Itoa(int(tomcatSpecs.Ports[0].ContainerPort))
-		
+
 		_, ok := tomcats[podIP]
 		if ok &&
 			!containerIsActive {
