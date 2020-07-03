@@ -330,6 +330,7 @@ func handleTomcatPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) {
 		} else if !ok &&
 			(pod.ObjectMeta.DeletionGracePeriodSeconds != nil ||
 				pod.ObjectMeta.DeletionTimestamp != nil) {
+
 			fmt.Println("Pod \"" + podName + "\" is being deleted.")
 
 		} else {
