@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: proxy-balancer-automation
+  namespace: default
+spec:
+  serviceAccountName: internal-kubectl
+  containers:
+    - name: proxy-balancer-automation
+      image: proxy_balancer_automation:v1
+      imagePullPolicy: IfNotPresent
+      tty: true
+      volumeMounts:
+        - name: configuration
+          mountPath: /proxy-balancer-automation/config.yml
+          subPath: config.yml
+  volumes:
+    - name: configuration
+      configMap:
+        name: proxy-balancer-automation-configmap

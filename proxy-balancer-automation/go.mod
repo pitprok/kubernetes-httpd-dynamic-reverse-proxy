@@ -1,4 +1,4 @@
-module tomcat-detector
+module proxy-balancer-Automation
 
 go 1.13
 

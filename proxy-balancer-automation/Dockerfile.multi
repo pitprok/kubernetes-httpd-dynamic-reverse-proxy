@@ -19,9 +19,9 @@
 # First Stage
 FROM debian:buster
 RUN apt update && \
-      apt install -y curl && \
-      curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && \
-      chmod +x ./kubectl
+    apt install -y curl && \
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl
 
 # Second Stage
 FROM golang:1.13.12
@@ -31,16 +31,16 @@ LABEL \
     description="Script that watches for events concerning the creation and removal of tomcat pods" \
     architecture="x86_64"
 
-RUN useradd user && mkdir tomcat-detector && chmod -R 777 tomcat-detector/
+RUN useradd user && mkdir proxy-balancer-automation && chmod -R 777 proxy-balancer-automation/
 
 
 
 COPY --from=0 /kubectl /usr/local/bin/kubectl
-COPY "main.go" "go.mod" "go.sum" /tomcat-detector/
-WORKDIR /tomcat-detector/
+COPY "main.go" "go.mod" "go.sum" /proxy-balancer-automation/
+WORKDIR /proxy-balancer-automation/
 RUN go build
 
 USER user
 
-# CMD ["go", "run", "/tomcat-detector/main.go"]
-CMD ["./tomcat-detector"]
+# CMD ["go", "run", "/proxy-balancer-automation/main.go"]
+CMD ["./proxy-balancer-automation"]

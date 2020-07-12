@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: tomcat-detector-configmap
+  name: proxy-balancer-automation-configmap
 data:
   config.yml: |
     httpdPodName: httpd

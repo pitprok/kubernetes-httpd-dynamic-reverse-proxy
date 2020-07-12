@@ -17,15 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	//
-	// Uncomment to load all auth plugins
-	// _ "k8s.io/client-go/plugin/pkg/client/auth"
-	//
-	// Or uncomment to load specific auth plugins
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/azure"
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
 
 var config Config
@@ -41,7 +32,7 @@ type Config struct {
 }
 
 // Imports configuration from config.yml and stores it in a global variable
-func importConfiguration() {
+func importUserConfiguration() {
 	filename, _ := filepath.Abs("./config.yml")
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -86,10 +77,7 @@ func ipAlreadyExists(podIP string, containerPort string) bool {
 //after checking if it isn't already included
 //and reloads httpd's configuration
 func addToBalancer(podIP string, containerPort string) {
-	if ipAlreadyExists(podIP, containerPort) {
-		fmt.Println(podIP + ":" + containerPort + " already in proxy_balancer.conf. Skipping...")
-	} else {
-		fmt.Println("Adding " + podIP + ":" + containerPort + " to " + config.ProxyBalancerConf)
+	if !ipAlreadyExists(podIP, containerPort) {
 		sedExpression := "s|\\(<Proxy \"balancer:.*>\\)|\\1\\n    BalancerMember \"http://" + podIP + ":" + containerPort + "\"|"
 
 		cmd := exec.Command("kubectl", "exec", config.HttpdPodName, "--",
@@ -119,7 +107,6 @@ func removeFromBalancer(podIP string, containerPort string) {
 }
 
 func reloadHttpdConfig() {
-	fmt.Println("Reloading httpd configuration.")
 	cmd := exec.Command("kubectl", "exec", "httpd", "--container", config.HttpdContainerName, "--",
 		config.HttpdBinary, "-k", "graceful")
 	err := cmd.Run()
@@ -164,7 +151,6 @@ func getHttpdContainerSpecs(pod *v1.Pod) v1.Container {
 //addMissingBalancerMembers tries to add all the online tomcat servers
 //which fit the criteria set by the user to the configuration of mod_proxy_balancer
 func addMissingBalancerMembers(tomcats map[string]string) {
-	fmt.Println("Adding missing balancer members")
 	for tomcatIP, tomcatPort := range tomcats {
 		addToBalancer(tomcatIP, tomcatPort)
 	}
@@ -172,12 +158,7 @@ func addMissingBalancerMembers(tomcats map[string]string) {
 }
 
 func handleHttpdPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) bool {
-	//TODO try to break into smaller functions
 	podIP := pod.Status.PodIP
-	podName := pod.ObjectMeta.Name
-	// Empty line to separate log events
-	fmt.Println("")
-	fmt.Printf("Namespace: %s Pod Name: %s\n", pod.ObjectMeta.Namespace, podName)
 
 	if podIP != "" &&
 		len(pod.Status.Conditions) > 0 &&
@@ -187,11 +168,6 @@ func handleHttpdPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) bo
 		containerIsActive := containerIsActive(pod, httpdStatus)
 
 		if containerIsActive {
-			if !httpdOnline {
-				fmt.Println("httpd is online")
-			} else {
-				fmt.Println("httpd modified")
-			}
 
 			addMissingBalancerMembers(tomcats)
 
@@ -200,15 +176,11 @@ func handleHttpdPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) bo
 		} else if pod.ObjectMeta.DeletionGracePeriodSeconds != nil ||
 			pod.ObjectMeta.DeletionTimestamp != nil {
 
-			fmt.Println("httpd is being deleted")
 			httpdOnline = false
 
 		} else {
-			fmt.Println("httpd on pod \"" + podName + "\" is offline.")
 			httpdOnline = false
 		}
-	} else {
-		fmt.Println("Pod \"" + podName + "\" isn't initialized yet")
 	}
 	return httpdOnline
 }
@@ -271,7 +243,7 @@ func getTomcatContainerSpecs(pod *v1.Pod, tomcatStatus v1.ContainerStatus) v1.Co
 //tomcatResponds tries to send a get request to the tomcat server,
 //retrying after 1 second if it there is no response,
 //up to 10 times
-func tomcatResponds(podName string, podIP string, tomcatPort string) bool {
+func tomcatResponds(podIP string, tomcatPort string) bool {
 	for i := 0; i < 10; i++ {
 		resp, err := http.Get("http://" + podIP + ":" + tomcatPort)
 		if err != nil {
@@ -286,12 +258,8 @@ func tomcatResponds(podName string, podIP string, tomcatPort string) bool {
 }
 
 func handleTomcatPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) {
-	//TODO try to break into smaller functions
 	podIP := pod.Status.PodIP
-	podName := pod.ObjectMeta.Name
-	// Empty line to separate log events
-	fmt.Println()
-	fmt.Printf("Namespace: %s Pod Name: %s \n", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
+
 	if podIP != "" &&
 		len(pod.Status.Conditions) > 0 &&
 		len(pod.Status.ContainerStatuses) > 0 {
@@ -307,45 +275,25 @@ func handleTomcatPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) {
 		if ok &&
 			!containerIsActive {
 			if httpdOnline {
-				fmt.Println("Tomcat server in pod \"" + podName + "\" went offline/crashed, removing it from proxy_balancer.conf")
 				removeFromBalancer(podIP, containerPort)
 			}
 			delete(tomcats, podIP)
 		} else if !ok &&
 			containerIsActive {
-
-			if tomcatResponds(podName, podIP, containerPort) {
+			if tomcatResponds(podIP, containerPort) {
 				if httpdOnline {
 					addToBalancer(podIP, containerPort)
-				} else {
-					fmt.Println("Tomcat server in pod \"" + podName + "\" is online, but httpd isn't")
-					fmt.Println("The tomcat server will be added to httpd's balancer members when it's back online")
 				}
 				tomcats[podIP] = containerPort
-
-			} else {
-				fmt.Println("Can't get a response from tomcat, check pod " + podName)
 			}
-			// Checks if tomcat is in the process of being deleted to prevent unnecessary error messages
-		} else if !ok &&
-			(pod.ObjectMeta.DeletionGracePeriodSeconds != nil ||
-				pod.ObjectMeta.DeletionTimestamp != nil) {
-
-			fmt.Println("Pod \"" + podName + "\" is being deleted.")
-
-		} else {
-			fmt.Println("Tomcat on pod \"" + podName + "\" is offline.")
 		}
-
-	} else {
-		fmt.Println("Pod \"" + podName + "\" isn't initialized yet.")
 	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func main() {
-	importConfiguration()
+	importUserConfiguration()
 	tomcats := make(map[string]string)
 	httpdOnline := false
 
