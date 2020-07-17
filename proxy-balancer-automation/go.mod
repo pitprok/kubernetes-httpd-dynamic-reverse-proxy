@@ -1,4 +1,4 @@
-module proxy-balancer-Automation
+module proxy-balancer-automation
 
 go 1.13
 
