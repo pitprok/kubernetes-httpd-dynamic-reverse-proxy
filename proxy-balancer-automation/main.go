@@ -78,6 +78,7 @@ func ipAlreadyExists(podIP string, containerPort string) bool {
 //and reloads httpd's configuration
 func addToBalancer(podIP string, containerPort string) {
 	if !ipAlreadyExists(podIP, containerPort) {
+		fmt.Println("Adding " + podIP + ":" + containerPort + " to " + config.ProxyBalancerConf)
 		sedExpression := "s|\\(<Proxy \"balancer:.*>\\)|\\1\\n    BalancerMember \"http://" + podIP + ":" + containerPort + "\"|"
 
 		cmd := exec.Command("kubectl", "exec", config.HttpdPodName, "--",
@@ -96,6 +97,7 @@ func addToBalancer(podIP string, containerPort string) {
 //from the configuration of mod_proxy_balancer
 //and reloads httpd's configuration
 func removeFromBalancer(podIP string, containerPort string) {
+	fmt.Println("Removing " + podIP + ":" + containerPort + " from " + config.ProxyBalancerConf)
 	sedExpression := "/    BalancerMember \"http:\\/\\/" + podIP + ":" + containerPort + "\"/d"
 	cmd := exec.Command("kubectl", "exec", config.HttpdPodName, "--",
 		"sed", "-i", sedExpression, config.ProxyBalancerConf)
@@ -107,6 +109,7 @@ func removeFromBalancer(podIP string, containerPort string) {
 }
 
 func reloadHttpdConfig() {
+	fmt.Println("Reloading httpd configuration.")
 	cmd := exec.Command("kubectl", "exec", "httpd", "--container", config.HttpdContainerName, "--",
 		config.HttpdBinary, "-k", "graceful")
 	err := cmd.Run()
@@ -151,6 +154,7 @@ func getHttpdContainerSpecs(pod *v1.Pod) v1.Container {
 //addMissingBalancerMembers tries to add all the online tomcat servers
 //which fit the criteria set by the user to the configuration of mod_proxy_balancer
 func addMissingBalancerMembers(tomcats map[string]string) {
+	fmt.Println("Adding missing balancer members")
 	for tomcatIP, tomcatPort := range tomcats {
 		addToBalancer(tomcatIP, tomcatPort)
 	}
@@ -259,7 +263,7 @@ func tomcatResponds(podIP string, tomcatPort string) bool {
 
 func handleTomcatPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) {
 	podIP := pod.Status.PodIP
-
+	podName := pod.ObjectMeta.Name
 	if podIP != "" &&
 		len(pod.Status.Conditions) > 0 &&
 		len(pod.Status.ContainerStatuses) > 0 {
@@ -283,6 +287,9 @@ func handleTomcatPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) {
 			if tomcatResponds(podIP, containerPort) {
 				if httpdOnline {
 					addToBalancer(podIP, containerPort)
+				} else {
+					fmt.Println("Tomcat server in pod \"" + podName + "\" is online, but an instance of httpd can't be found")
+					fmt.Println("The tomcat server will be added to httpd's balancer members when an active httpd is detected")
 				}
 				tomcats[podIP] = containerPort
 			}
