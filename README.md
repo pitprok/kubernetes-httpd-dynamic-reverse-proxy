@@ -3,6 +3,28 @@
 The focus of this program is to automatically detect new back-end servers in a kubernetes cluster and dynamically add/remove them to/from the balancer members of httpd's mod_proxy_balancer.
 For the time being the only back-end server supported is tomcat.
 
+## Prerequisites
+
+### Docker
+
+Installation instructions
+`https://docs.docker.com/engine/install/`
+
+### kubectl (min. version 1.11.0)
+
+Installation instructions
+`https://kubernetes.io/docs/tasks/tools/install-kubectl/`
+
+### Kubernetes
+
+This application is meant to be used in a kubernetes cluster
+
+To use/test locally, minikube can be used (min. version v1.4.0)
+Warning: While using minikube, the following command has to be run before building the proxy-balancer-automation docker image
+`eval $(minikube docker-env)`
+Installation instructions
+`https://kubernetes.io/docs/tasks/tools/install-minikube/`
+
 ## Setup guide
 
 Open the file proxy-balancer-automation-configmap.yml and set the following parameters
@@ -27,7 +49,11 @@ Here the user may set any labels the pod containing tomcat should have in order 
 
 After configuring the selection criteria and providing the locations of the necessary files, running setup.sh automatically builds the docker image, creates the necessary service account, role and role binding, and deploys the pod.
 
-Alternatively, each yml can be modified separately to suit the needs of the user and applied individually. You can find details about the use of each component below.
+Alternatively, each .yml file can be modified separately to suit the needs of the user and applied individually. You can find details about the use of each component below.
+
+## Testing the application
+
+After creating an httpd and a web server pod that match the criteria set in the installation guide, the web server will automatically appear in your mod_proxy_balancer configuration file.
 
 ## Components analysis
 
