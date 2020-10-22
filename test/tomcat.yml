@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tomcat
+  namespace: default
+  labels:
+    category: test-dynamic-reverse-proxy
+
+spec:
+  containers:
+    - name: tomcat
+      image: tomcat:9.0
+      imagePullPolicy: IfNotPresent
+      command:
+        [
+          "/bin/bash",
+          "-c",
+          "rm -r /usr/local/tomcat/webapps/ && mv /usr/local/tomcat/webapps.dist /usr/local/tomcat/webapps/ && CATALINA_PID=/usr/local/tomcat/logs/tomcat.pid /usr/local/tomcat/bin/catalina.sh start && tail --pid=$(cat /usr/local/tomcat/logs/tomcat.pid) -f /dev/null",
+        ]
+      ports:
+        - containerPort: 8080
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 8080
+        initialDelaySeconds: 6
+        failureThreshold: 5
+        periodSeconds: 3
+        timeoutSeconds: 2
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8080
+        initialDelaySeconds: 5
+        periodSeconds: 3
+        failureThreshold: 4
+      startupProbe:
+        httpGet:
+          path: /
+          port: 8080
+        failureThreshold: 60
+        periodSeconds: 5
