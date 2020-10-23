@@ -194,7 +194,6 @@ func handleHttpdPod(pod *v1.Pod, tomcats map[string]string, httpdOnline bool) bo
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func podContainsTomcat(pod *v1.Pod) bool {
-	//TODO break into 2 smaller functions
 	imagesMatch := false
 	labelsMatch := false
 	for _, container := range pod.Spec.Containers {
