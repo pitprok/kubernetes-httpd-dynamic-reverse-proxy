@@ -154,7 +154,9 @@ func getHttpdContainerSpecs(pod *v1.Pod) v1.Container {
 //addMissingBalancerMembers tries to add all the online tomcat servers
 //which fit the criteria set by the user to the configuration of mod_proxy_balancer
 func addMissingBalancerMembers(tomcats map[string]string) {
-	fmt.Println("Adding missing balancer members")
+	if len(tomcats > 0) {
+		fmt.Println("Adding missing balancer members")
+	}
 	for tomcatIP, tomcatPort := range tomcats {
 		addToBalancer(tomcatIP, tomcatPort)
 	}
