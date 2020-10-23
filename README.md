@@ -31,7 +31,7 @@ https://kubernetes.io/docs/tasks/tools/install-minikube/
 
 ## Setup guide
 
-1. Make sure that mod_proxy_balancer is enabled in your httpd pod
+1. Make sure that mod_proxy_balancer is enabled in your httpd comfiguration
    https://httpd.apache.org/docs/2.4/mod/mod_proxy_balancer.html
 
 2. Open the file proxy-balancer-automation-configmap.yml and set the following parameters
