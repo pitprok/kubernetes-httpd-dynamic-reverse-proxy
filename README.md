@@ -71,7 +71,7 @@ Alternatively, each .yml file can be modified separately to suit the needs of th
 
   3. `kubectl apply -f httpd.yml`
 
-  4. `kubectl apply -f tomcat.yml` or `kubectl apply -f tomcat-deployment.yml`
+  4. `kubectl apply -f tomcat-deployment.yml`
 
 - With your own custom httpd & tomcat
 
