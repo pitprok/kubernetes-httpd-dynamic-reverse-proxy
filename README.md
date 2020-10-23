@@ -31,10 +31,7 @@ https://kubernetes.io/docs/tasks/tools/install-minikube/
 
 ## Setup guide
 
-1. Make sure that mod_proxy_balancer is enabled in your httpd comfiguration
-   https://httpd.apache.org/docs/2.4/mod/mod_proxy_balancer.html
-
-2. Open the file proxy-balancer-automation-configmap.yml and set the following parameters
+1. Open the file proxy-balancer-automation-configmap.yml and set the following parameters
 
    - httpdPodName
 
@@ -60,7 +57,7 @@ https://kubernetes.io/docs/tasks/tools/install-minikube/
 
    Here the user may set which labels the tomcat pod should have, in order to be included.
 
-3. Run setup.sh which automatically builds the docker image, creates the necessary service account, role and role binding, and deploys the automation pod.
+2. Run setup.sh which automatically builds the docker image, creates the necessary service account, role and role binding, and deploys the automation pod.
 
 Alternatively, each .yml file can be modified separately to suit the needs of the user and applied individually. You can find details about the use of each component below.
 
@@ -79,6 +76,10 @@ Alternatively, each .yml file can be modified separately to suit the needs of th
 - With your own custom httpd & tomcat
 
   1. Deploy an instance of the httpd server
+
+     - Make sure that mod_proxy_balancer is enabled in your httpd conf file and you have created the necessary balancer configuration. An example can be found in test/proxy-balancer-configmap.yml under "proxy_balancer.conf"
+
+       https://httpd.apache.org/docs/2.4/mod/mod_proxy_balancer.html
 
   2. Deploy an instance of the tomcat server
 
